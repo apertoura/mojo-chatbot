@@ -405,8 +405,14 @@ app.post('/api/chat', async (req, res) => {
       content: message
     });
     
-    // Log user message
-    logConversation(clientIP, sid, 'user', message);
+    // Log user message with search context
+    logConversation(clientIP, sid, 'user', message, {
+      debug: {
+        messageLength: message.length,
+        isNewSession: session.messages.length === 1,
+        userAgent: req.headers['user-agent']?.substring(0, 100)
+      }
+    });
     
     // Build system prompt
     const systemPrompt = `You are a helpful Mojo Dialer support assistant. Answer questions about Mojo using the provided documentation, support tickets, and website content.
@@ -437,12 +443,28 @@ ${context}`;
       content: assistantMessage
     });
     
-    // Log assistant response with sources
+    // Log assistant response with full debug data
     logConversation(clientIP, sid, 'assistant', assistantMessage, {
-      sourcesCount: {
-        kb: kbResults.length,
-        tickets: ticketResults.length,
-        mojosells: mojosellsResults.length
+      debug: {
+        sourcesUsed: {
+          kb: kbResults.map(a => ({ 
+            title: a.title, 
+            url: a.url, 
+            category: a.category,
+            relevance: a.content.substring(0, 200) + '...'
+          })),
+          tickets: ticketResults.map(t => ({ 
+            subject: t.subject, 
+            status: t.status,
+            hasResolution: !!t.resolution
+          })),
+          mojosells: mojosellsResults.map(p => ({ 
+            title: p.title, 
+            url: p.url 
+          }))
+        },
+        contextLength: context.length,
+        messagesInContext: Math.min(session.messages.length, 10)
       }
     });
     
