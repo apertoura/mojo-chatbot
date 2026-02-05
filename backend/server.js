@@ -3,7 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import Anthropic from '@anthropic-ai/sdk';
-import { readFile } from 'fs/promises';
+import { readFile, appendFile, mkdir } from 'fs/promises';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import dotenv from 'dotenv';
@@ -242,6 +242,53 @@ setInterval(() => {
   }
 }, 5 * 60 * 1000);
 
+// Conversation logging - grouped by IP
+const LOGS_DIR = join(__dirname, '../logs');
+
+// Initialize logs directory
+(async () => {
+  try {
+    await mkdir(LOGS_DIR, { recursive: true });
+    console.log('📝 Conversation logging enabled');
+  } catch (err) {
+    console.error('Failed to create logs directory:', err);
+  }
+})();
+
+// Sanitize IP for filename
+function sanitizeIP(ip) {
+  return (ip || 'unknown').replace(/[^a-zA-Z0-9.-]/g, '_').replace(/:+/g, '-');
+}
+
+// Get client IP (handles proxies)
+function getClientIP(req) {
+  return req.headers['x-forwarded-for']?.split(',')[0]?.trim() 
+    || req.headers['x-real-ip'] 
+    || req.socket?.remoteAddress 
+    || 'unknown';
+}
+
+// Log conversation entry
+async function logConversation(ip, sessionId, role, content, metadata = {}) {
+  const sanitizedIP = sanitizeIP(ip);
+  const logFile = join(LOGS_DIR, `${sanitizedIP}.jsonl`);
+  const timestamp = new Date().toISOString();
+  
+  const entry = {
+    timestamp,
+    sessionId,
+    role,
+    content: content.substring(0, 5000), // Truncate very long messages
+    ...metadata
+  };
+  
+  try {
+    await appendFile(logFile, JSON.stringify(entry) + '\n');
+  } catch (err) {
+    console.error('Failed to log conversation:', err.message);
+  }
+}
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({
@@ -280,6 +327,7 @@ app.get('/api/kb/status', (req, res) => {
 app.post('/api/chat', async (req, res) => {
   try {
     const { message, sessionId } = req.body;
+    const clientIP = getClientIP(req);
     
     if (!message || typeof message !== 'string' || message.trim().length === 0) {
       return res.status(400).json({ error: 'Message is required' });
@@ -357,6 +405,9 @@ app.post('/api/chat', async (req, res) => {
       content: message
     });
     
+    // Log user message
+    logConversation(clientIP, sid, 'user', message);
+    
     // Build system prompt
     const systemPrompt = `You are a helpful Mojo Dialer support assistant. Answer questions about Mojo using the provided documentation, support tickets, and website content.
 
@@ -384,6 +435,15 @@ ${context}`;
     session.messages.push({
       role: 'assistant',
       content: assistantMessage
+    });
+    
+    // Log assistant response with sources
+    logConversation(clientIP, sid, 'assistant', assistantMessage, {
+      sourcesCount: {
+        kb: kbResults.length,
+        tickets: ticketResults.length,
+        mojosells: mojosellsResults.length
+      }
     });
     
     // Prepare response with sources used
