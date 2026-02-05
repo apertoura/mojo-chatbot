@@ -3,7 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import Anthropic from '@anthropic-ai/sdk';
-import { readFile, writeFile } from 'fs/promises';
+import { readFile } from 'fs/promises';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import dotenv from 'dotenv';
@@ -55,9 +55,6 @@ let ticketsLoaded = false;
 let mojosellsPages = [];
 let mojosellsLoaded = false;
 
-let corrections = [];
-let correctionsLoaded = false;
-
 // Load KB articles
 async function loadKB() {
   try {
@@ -103,21 +100,6 @@ async function loadMojosells() {
   }
 }
 
-// Load user corrections
-async function loadCorrections() {
-  try {
-    const dataPath = join(__dirname, '../data/corrections.json');
-    const data = await readFile(dataPath, 'utf8');
-    corrections = JSON.parse(data);
-    correctionsLoaded = true;
-    console.log(`✅ Loaded ${corrections.length} user corrections`);
-  } catch (error) {
-    console.log('ℹ️  No corrections file found (will be created when needed)');
-    corrections = [];
-    correctionsLoaded = true; // Mark as loaded even if empty
-  }
-}
-
 // Initialize Claude
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY
@@ -128,15 +110,7 @@ function searchKB(query, limit = 3) {
   if (kbArticles.length === 0) return [];
   
   const queryLower = query.toLowerCase();
-  
-  // Filter out common/stop words and clean keywords
-  const stopWords = new Set(['how', 'do', 'i', 'the', 'a', 'an', 'to', 'in', 'on', 'for', 'with', 'from', 'can', 'what', 'when', 'where', 'why', 'my', 'is', 'are', 'it', 'this', 'that', 'and', 'or', 'but']);
-  const keywords = queryLower
-    .replace(/[^\w\s]/g, ' ') // Remove punctuation
-    .split(/\s+/)
-    .filter(k => k.length > 2 && !stopWords.has(k));
-  
-  if (keywords.length === 0) return [];
+  const keywords = queryLower.split(/\s+/).filter(k => k.length > 2);
   
   const scored = kbArticles.map(article => {
     const titleLower = article.title.toLowerCase();
@@ -145,42 +119,28 @@ function searchKB(query, limit = 3) {
     
     let score = 0;
     
-    // Exact phrase match in title (very high score)
-    if (titleLower.includes(queryLower)) {
-      score += 100;
-    }
-    
-    // Exact phrase match in content (high score)
-    if (contentLower.includes(queryLower)) {
-      score += 50;
-    }
-    
-    // Keyword matches
     keywords.forEach(keyword => {
       if (titleLower.includes(keyword)) {
-        score += 20; // Increased from 10
-        if (titleLower.startsWith(keyword)) score += 10;
+        score += 10;
+        if (titleLower.startsWith(keyword)) score += 5;
       }
-      if (categoryLower.includes(keyword)) score += 10;
-      
+      if (categoryLower.includes(keyword)) score += 7;
       const contentMatches = (contentLower.match(new RegExp(keyword, 'g')) || []).length;
-      score += Math.min(contentMatches * 2, 10);
+      score += Math.min(contentMatches, 5);
     });
     
-    // Bonus for matching multiple keywords
-    const matchedKeywords = keywords.filter(k => 
-      titleLower.includes(k) || contentLower.includes(k)
-    ).length;
-    score += matchedKeywords * 5;
+    if (queryLower.length > 10 && contentLower.includes(queryLower)) {
+      score += 15;
+    }
     
     return { article, score };
   });
   
   return scored
-    .filter(s => s.score >= 15) // Minimum score threshold
+    .filter(s => s.score > 0)
     .sort((a, b) => b.score - a.score)
     .slice(0, limit)
-    .map(s => ({ ...s.article, _score: s.score })); // Include score for filtering
+    .map(s => s.article);
 }
 
 // Search Zoho tickets
@@ -188,15 +148,7 @@ function searchTickets(query, limit = 3) {
   if (zohoTickets.length === 0) return [];
   
   const queryLower = query.toLowerCase();
-  
-  // Filter out stop words and clean keywords
-  const stopWords = new Set(['how', 'do', 'i', 'the', 'a', 'an', 'to', 'in', 'on', 'for', 'with', 'from', 'can', 'what', 'when', 'where', 'why', 'my', 'is', 'are', 'it', 'this', 'that', 'and', 'or', 'but']);
-  const keywords = queryLower
-    .replace(/[^\w\s]/g, ' ') // Remove punctuation
-    .split(/\s+/)
-    .filter(k => k.length > 2 && !stopWords.has(k));
-  
-  if (keywords.length === 0) return [];
+  const keywords = queryLower.split(/\s+/).filter(k => k.length > 2);
   
   const scored = zohoTickets.map(ticket => {
     const subjectLower = ticket.subject.toLowerCase();
@@ -205,41 +157,34 @@ function searchTickets(query, limit = 3) {
     
     let score = 0;
     
-    // Exact phrase match (very high score)
-    if (subjectLower.includes(queryLower)) score += 100;
-    if (descriptionLower.includes(queryLower)) score += 50;
-    if (resolutionLower.includes(queryLower)) score += 60;
-    
-    // Keyword matches
     keywords.forEach(keyword => {
       if (subjectLower.includes(keyword)) {
-        score += 20;
-        if (subjectLower.startsWith(keyword)) score += 10;
+        score += 10;
+        if (subjectLower.startsWith(keyword)) score += 5;
       }
       
       const descMatches = (descriptionLower.match(new RegExp(keyword, 'g')) || []).length;
-      score += Math.min(descMatches * 2, 10);
+      score += Math.min(descMatches, 3);
       
       const resMatches = (resolutionLower.match(new RegExp(keyword, 'g')) || []).length;
-      score += Math.min(resMatches * 3, 15);
+      score += Math.min(resMatches, 5);
     });
     
-    // Bonus for matching multiple keywords
-    const matchedKeywords = keywords.filter(k => 
-      subjectLower.includes(k) || descriptionLower.includes(k) || resolutionLower.includes(k)
-    ).length;
-    score += matchedKeywords * 5;
+    if (queryLower.length > 10) {
+      if (subjectLower.includes(queryLower)) score += 15;
+      if (descriptionLower.includes(queryLower)) score += 10;
+      if (resolutionLower.includes(queryLower)) score += 12;
+    }
     
-    // Prefer closed tickets with resolutions
     if (ticket.status === 'Closed' && ticket.resolution) {
-      score += 5;
+      score += 3;
     }
     
     return { ticket, score };
   });
   
   return scored
-    .filter(s => s.score >= 15) // Minimum score threshold
+    .filter(s => s.score > 0)
     .sort((a, b) => b.score - a.score)
     .slice(0, limit)
     .map(s => s.ticket);
@@ -250,15 +195,7 @@ function searchMojosells(query, limit = 3) {
   if (mojosellsPages.length === 0) return [];
   
   const queryLower = query.toLowerCase();
-  
-  // Filter out stop words and clean keywords
-  const stopWords = new Set(['how', 'do', 'i', 'the', 'a', 'an', 'to', 'in', 'on', 'for', 'with', 'from', 'can', 'what', 'when', 'where', 'why', 'my', 'is', 'are', 'it', 'this', 'that', 'and', 'or', 'but']);
-  const keywords = queryLower
-    .replace(/[^\w\s]/g, ' ') // Remove punctuation
-    .split(/\s+/)
-    .filter(k => k.length > 2 && !stopWords.has(k));
-  
-  if (keywords.length === 0) return [];
+  const keywords = queryLower.split(/\s+/).filter(k => k.length > 2);
   
   const scored = mojosellsPages.map(page => {
     const titleLower = (page.title || '').toLowerCase();
@@ -267,95 +204,28 @@ function searchMojosells(query, limit = 3) {
     
     let score = 0;
     
-    // Exact phrase match
-    if (titleLower.includes(queryLower)) score += 100;
-    if (contentLower.includes(queryLower)) score += 50;
-    
-    // Keyword matches
     keywords.forEach(keyword => {
       if (titleLower.includes(keyword)) {
-        score += 20;
-        if (titleLower.startsWith(keyword)) score += 10;
+        score += 10;
+        if (titleLower.startsWith(keyword)) score += 5;
       }
-      if (urlLower.includes(keyword)) score += 10;
-      
+      if (urlLower.includes(keyword)) score += 5;
       const contentMatches = (contentLower.match(new RegExp(keyword, 'g')) || []).length;
-      score += Math.min(contentMatches * 2, 10);
+      score += Math.min(contentMatches, 5);
     });
     
-    // Bonus for matching multiple keywords
-    const matchedKeywords = keywords.filter(k => 
-      titleLower.includes(k) || contentLower.includes(k)
-    ).length;
-    score += matchedKeywords * 5;
+    if (queryLower.length > 10 && contentLower.includes(queryLower)) {
+      score += 15;
+    }
     
     return { page, score };
   });
   
   return scored
-    .filter(s => s.score >= 15) // Minimum score threshold
+    .filter(s => s.score > 0)
     .sort((a, b) => b.score - a.score)
     .slice(0, limit)
     .map(s => s.page);
-}
-
-// Search corrections
-function searchCorrections(query, limit = 3) {
-  if (corrections.length === 0) return [];
-  
-  const queryLower = query.toLowerCase();
-  
-  // Filter out stop words and clean keywords
-  const stopWords = new Set(['how', 'do', 'i', 'the', 'a', 'an', 'to', 'in', 'on', 'for', 'with', 'from', 'can', 'what', 'when', 'where', 'why', 'my', 'is', 'are', 'it', 'this', 'that', 'and', 'or', 'but']);
-  const keywords = queryLower
-    .replace(/[^\w\s]/g, ' ') // Remove punctuation
-    .split(/\s+/)
-    .filter(k => k.length > 2 && !stopWords.has(k));
-  
-  if (keywords.length === 0) return [];
-  
-  const scored = corrections.map(correction => {
-    const questionLower = correction.question.toLowerCase();
-    const correctionTextLower = correction.correction.toLowerCase();
-    
-    let score = 0;
-    
-    // Exact phrase match (very high score for corrections)
-    if (questionLower.includes(queryLower)) score += 150;
-    if (correctionTextLower.includes(queryLower)) score += 100;
-    
-    // Keyword matches
-    keywords.forEach(keyword => {
-      if (questionLower.includes(keyword)) {
-        score += 30;
-        if (questionLower.startsWith(keyword)) score += 15;
-      }
-      
-      const correctionMatches = (correctionTextLower.match(new RegExp(keyword, 'g')) || []).length;
-      score += Math.min(correctionMatches * 3, 15);
-    });
-    
-    // Bonus for matching multiple keywords
-    const matchedKeywords = keywords.filter(k => 
-      questionLower.includes(k) || correctionTextLower.includes(k)
-    ).length;
-    score += matchedKeywords * 10;
-    
-    return { correction, score };
-  });
-  
-  return scored
-    .filter(s => s.score >= 20) // Minimum score threshold
-    .sort((a, b) => b.score - a.score)
-    .slice(0, limit)
-    .map(s => s.correction);
-}
-
-// Save correction
-async function saveCorrection(correction) {
-  corrections.push(correction);
-  const dataPath = join(__dirname, '../data/corrections.json');
-  await writeFile(dataPath, JSON.stringify(corrections, null, 2), 'utf8');
 }
 
 // In-memory session store
@@ -402,51 +272,8 @@ app.get('/api/kb/status', (req, res) => {
     mojosells: {
       loaded: mojosellsLoaded,
       count: mojosellsPages.length
-    },
-    corrections: {
-      loaded: correctionsLoaded,
-      count: corrections.length
     }
   });
-});
-
-// Submit correction
-app.post('/api/correction', async (req, res) => {
-  try {
-    const { question, aiResponse, correction, sessionId, messageIndex } = req.body;
-    
-    if (!question || !aiResponse || !correction) {
-      return res.status(400).json({ error: 'Question, AI response, and correction are required' });
-    }
-    
-    if (correction.length > 2000) {
-      return res.status(400).json({ error: 'Correction too long (max 2000 characters)' });
-    }
-    
-    const correctionEntry = {
-      id: uuidv4(),
-      question: question.trim(),
-      aiResponse: aiResponse.trim(),
-      correction: correction.trim(),
-      sessionId: sessionId || null,
-      messageIndex: messageIndex || null,
-      timestamp: new Date().toISOString()
-    };
-    
-    await saveCorrection(correctionEntry);
-    
-    console.log(`📝 Correction saved: "${question.substring(0, 50)}..."`);
-    
-    res.json({
-      success: true,
-      message: 'Thank you! Your correction has been saved and will help improve future responses.',
-      correctionId: correctionEntry.id
-    });
-    
-  } catch (error) {
-    console.error('Correction submission error:', error);
-    res.status(500).json({ error: 'Failed to save correction' });
-  }
 });
 
 // Chat endpoint
@@ -478,40 +305,13 @@ app.post('/api/chat', async (req, res) => {
     
     session.lastActivity = Date.now();
     
-    // Detect pricing questions
-    const isPricingQuestion = /\b(price|prices|pricing|cost|costs|how much|payment|payments|subscription|subscriptions|fee|fees|monthly|plan|plans)\b/i.test(message);
-    
     // Search all data sources
-    let kbResults = searchKB(message, 3);
-    let ticketResults = searchTickets(message, 2);
-    let mojosellsResults = searchMojosells(message, 2);
-    let correctionResults = searchCorrections(message, 2);
-    
-    // For pricing questions, ONLY use mojosells.com (specifically pricing page)
-    if (isPricingQuestion) {
-      console.log('💰 Pricing question detected, filtering to pricing page only');
-      // Filter to only include the pricing page
-      mojosellsResults = mojosellsPages.filter(p => p.url.includes('/pricing'));
-      // Clear other sources for pricing questions
-      kbResults = [];
-      ticketResults = [];
-      console.log(`💰 Filtered sources: mojosells=${mojosellsResults.length}, kb=${kbResults.length}, tickets=${ticketResults.length}`);
-    }
+    const kbResults = searchKB(message, 3);
+    const ticketResults = searchTickets(message, 2);
+    const mojosellsResults = searchMojosells(message, 2);
     
     // Build context from all sources
     let context = '';
-    
-    // CORRECTIONS FIRST - highest priority to avoid repeating mistakes
-    if (correctionResults.length > 0) {
-      context += '=== IMPORTANT: USER CORRECTIONS (Previous Mistakes to Avoid) ===\n\n';
-      correctionResults.forEach((corr, i) => {
-        context += `[CORRECTION-${i + 1}]\n`;
-        context += `Previous Question: "${corr.question}"\n`;
-        context += `Previous AI Response (INCORRECT): "${corr.aiResponse.substring(0, 300)}..."\n`;
-        context += `CORRECT ANSWER: "${corr.correction}"\n`;
-        context += `⚠️ Use this correction to provide accurate information.\n\n`;
-      });
-    }
     
     if (kbResults.length > 0) {
       context += '=== KNOWLEDGE BASE ARTICLES ===\n\n';
@@ -557,35 +357,23 @@ app.post('/api/chat', async (req, res) => {
       content: message
     });
     
-    // Build system prompt  
-    const systemPrompt = `CRITICAL FIRST RULE: Do NOT start any response with "Based on" or "According to". Start directly with the answer.
+    // Build system prompt
+    const systemPrompt = `You are a helpful Mojo Dialer support assistant. Answer questions about Mojo using the provided documentation, support tickets, and website content.
 
-You are Mojo Support - friendly, helpful, and knowledgeable. Answer like a warm, helpful colleague.
+Guidelines:
+- Be concise and friendly
+- Cite specific articles or tickets when relevant
+- If information isn't in the provided context, say so
+- Provide step-by-step instructions when appropriate
+- Reference relevant URLs when available
 
-${correctionResults.length > 0 ? '⚠️ **CRITICAL**: User corrections are included below. These represent previous mistakes. Follow the corrected information EXACTLY to avoid repeating errors.' : ''}
-
-${isPricingQuestion ? '**PRICING QUESTION DETECTED**: Answer using ONLY the mojosells.com pricing information below. All pricing information comes from the official pricing page.' : ''}
-
-Tone examples:
-✅ "Great question! Mojo Voice is an add-on service that costs $30/month..."
-✅ "Happy to help! Here's how to import contacts:"
-✅ "I'd be glad to explain that! Expired Data gives you..."
-❌ "Based on the information provided..." ← NEVER START LIKE THIS
-
-Never use: "based on", "according to", "knowledge base", "articles", "documentation"
-
-If you don't have the info:
-"I don't have details on that, but our support team can help! Call 877-859-6656 or email info@mojosells.com"
-
-Use ONLY the information below. Format clearly: numbers, bullets, **bold**.
-
+Available documentation:
 ${context}`;
     
     // Call Claude
     const response = await anthropic.messages.create({
-      model: 'claude-3-haiku-20240307',
+      model: 'claude-sonnet-4-20250514',
       max_tokens: 1024,
-      temperature: 0.4, // Balanced temperature - not too rigid, not too creative
       system: systemPrompt,
       messages: session.messages.slice(-10) // Last 10 messages for context
     });
@@ -600,30 +388,16 @@ ${context}`;
     
     // Prepare response with sources used
     const sourcesUsed = {
-      corrections: correctionResults.map(c => ({ 
-        question: c.question, 
-        correction: c.correction.substring(0, 200) + (c.correction.length > 200 ? '...' : ''),
-        timestamp: c.timestamp 
-      })),
       kb: kbResults.map(a => ({ title: a.title, url: a.url, category: a.category })),
       tickets: ticketResults.map(t => ({ subject: t.subject, status: t.status })),
       mojosells: mojosellsResults.map(p => ({ title: p.title, url: p.url }))
     };
     
-    // Only show highly relevant articles (score >= 40) in "Related Articles"
-    const relevantArticles = kbResults
-      .filter(a => a._score >= 40)
-      .map(a => ({ title: a.title, url: a.url }));
-    
-    // Add message index for correction tracking
-    const messageIndex = session.messages.length - 1;
-    
     res.json({
       response: assistantMessage,
       sessionId: sid,
-      messageIndex,
       sourcesUsed,
-      articlesUsed: relevantArticles // For backwards compatibility
+      articlesUsed: kbResults.map(a => ({ title: a.title, url: a.url })) // For backwards compatibility
     });
     
   } catch (error) {
@@ -651,8 +425,7 @@ async function start() {
   await Promise.all([
     loadKB(),
     loadTickets(),
-    loadMojosells(),
-    loadCorrections()
+    loadMojosells()
   ]);
   
   app.listen(PORT, () => {
@@ -661,7 +434,6 @@ async function start() {
     console.log(`   KB Articles: ${kbLoaded ? '✅' : '❌'} (${kbArticles.length})`);
     console.log(`   Support Tickets: ${ticketsLoaded ? '✅' : '⚠️ '} (${zohoTickets.length})`);
     console.log(`   Mojosells.com: ${mojosellsLoaded ? '✅' : '⚠️ '} (${mojosellsPages.length})`);
-    console.log(`   User Corrections: ${correctionsLoaded ? '✅' : '⚠️ '} (${corrections.length})`);
     console.log(`\nReady to serve! 🎉\n`);
   });
 }

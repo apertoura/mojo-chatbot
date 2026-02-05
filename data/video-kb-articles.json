@@ -1,0 +1,191 @@
+[
+  {
+    "title": "Mojo Dialer Overview and Features",
+    "url": "https://www.youtube.com/watch?v=qDuSPzx2qIw",
+    "category": "overview",
+    "description": "Complete overview of Mojo Dialer platform - power dialer, CRM, lead management, action plans, and mobile apps.",
+    "content": "Mojo Dialer Overview: Elevate your business and take your prospecting and follow-up to the next level with Mojo, a powerful, easy-to-use platform with tools to help you connect, engage, and take action. Core Features: Comprehensive CRM and industry-leading dialing interface. Automate prospecting lists and sales pipeline. Organize data into lists, groups, and action plans. Fully customizable dialing experience. State-of-the-art technology over analog telecom layer (not VoIP) for best audio and first hello answers. Complimentary caller ID whitelisting to avoid spam tagging. Group leads by outcomes, schedule appointments, create tasks, assign action plans for drip email and follow-up. Prospecting Dashboard for setting goals and tracking progress. Six high-quality data and lead sources in the U.S. Mobile apps for prospecting on the go, caller ID, door knocking, and mobile dashboard.",
+    "source": "video",
+    "videoId": "qDuSPzx2qIw"
+  },
+  {
+    "title": "Mojo Voice - Computer-Based Calling",
+    "url": "https://www.youtube.com/watch?v=y1GC9PxmNTI",
+    "category": "mojo-voice",
+    "description": "How to use Mojo Voice to connect directly without a phone - headset connects to computer, no third-party VoIP needed.",
+    "content": "Mojo Voice Overview: Mojo Voice allows you to connect directly to Mojo to make calls without a third-party phone. No cell phone, office phone, or third-party voice over IP needed - connect your headset directly to your computer. How to Use: Look for the 'Use Mojo Voice' checkbox when starting a dial session. When checked, you connect directly without dialing into the Mojo dialing server number. Grant browser permissions for microphone and speakers when prompted. Choose 'Allow While Visiting the Site' for convenience. Controls: Disconnect button ends the phone connection. Mute button for muting during calls. Settings icon to choose different headsets or speakers. Manual Click-to-Call: Even outside a Power Dial session, you can click any phone number and use Mojo Voice. The connection works the same way - through your computer without needing to dial in. All audio (hearing and speaking) goes through your computer headset.",
+    "source": "video",
+    "videoId": "y1GC9PxmNTI"
+  },
+  {
+    "title": "Mojo Voice Equipment Check and Updates",
+    "url": "https://www.youtube.com/watch?v=hrpcwkgbPuM",
+    "category": "mojo-voice",
+    "description": "Recent Mojo Voice update with equipment check pop-up to verify microphone and speaker connections.",
+    "content": "Mojo Voice Equipment Check: Recent update to help verify equipment is connected properly. When you start Power Dialer with Mojo Voice checked, a pop-up appears. Test Microphone: Click to verify mic is picking up your voice. Test Speaker: Plays an audio tone to confirm speaker output. You can access these settings anytime by clicking the Mojo Voice settings icon. Choose your proper input and output devices from the settings menu. If you need to temporarily not use Mojo Voice, uncheck the box before starting Power Dialer.",
+    "source": "video",
+    "videoId": "hrpcwkgbPuM"
+  },
+  {
+    "title": "Data Import Step 1 - Choose Your File",
+    "url": "https://www.youtube.com/watch?v=eKA-1n3o_H4",
+    "category": "importing-and-adding-data",
+    "description": "First step of importing spreadsheets into Mojo - selecting and uploading your file.",
+    "content": "Import Step 1 - Choose File: Click 'Choose File' button. Find the file you want to import on your computer. Click Open. Accepted formats: .xls, .xlsx, and .csv files. Once file is selected, click Next to proceed to step 2.",
+    "source": "video",
+    "videoId": "eKA-1n3o_H4"
+  },
+  {
+    "title": "Data Import Step 2 - Select Destination",
+    "url": "https://www.youtube.com/watch?v=cxWORV8dP0E",
+    "category": "importing-and-adding-data",
+    "description": "Second step of importing - choosing where to import your spreadsheet (calling list or group).",
+    "content": "Import Step 2 - Choose Destination: Choose to import into a Calling List or a Group. Calling Lists: For non-qualified leads you need to call. Groups: For leads with qualifications (hot lead, warm lead, future follow-up, past clients, sphere of influence). Create new list/group with the + button, or select existing. Optional: Select a Manager (only needed for multi-agent accounts with lower-access users). Optional: Select a Source to identify where data came from. Click Next to proceed to step 3.",
+    "source": "video",
+    "videoId": "cxWORV8dP0E"
+  },
+  {
+    "title": "Data Import Step 3 - Map Your Fields",
+    "url": "https://www.youtube.com/watch?v=JRBgZUSskUI",
+    "category": "importing-and-adding-data",
+    "description": "Third step of importing - mapping spreadsheet columns to Mojo fields with smart mapping and templates.",
+    "content": "Import Step 3 - Map Fields: Mapping connects your spreadsheet columns to Mojo fields. Smart Mapping automatically recognizes and matches common fields. Import Templates: Save your mapping for reuse with similar spreadsheets. Spreadsheet Reference at bottom shows preview of your data. Field Types: Contact info (full name, first/last, co-owner), Address fields (property and mailing), Phone numbers (can stack multiple - primary, phone 1-3, direct, mobile), Email, Miscellaneous/custom fields. Stacking Fields: When you add a phone number field, another appears below for additional numbers. Creating Custom Fields: Click + to add miscellaneous field, name it, choose type (text, date, time, number, decimal, percentage). Save Template: If importing from same source repeatedly, save your mapping as a template for future use.",
+    "source": "video",
+    "videoId": "JRBgZUSskUI"
+  },
+  {
+    "title": "Data Import Step 4 - Check for Duplicates",
+    "url": "https://www.youtube.com/watch?v=IEeqO4Gha2k",
+    "category": "importing-and-adding-data",
+    "description": "Fourth step of importing - checking and handling duplicate records.",
+    "content": "Import Step 4 - Check Duplicates: Duplicate checking is optional. Check against: Entire database (all lists and groups), the file itself, or both. Match duplicates by: Phone number (most common), email, property address, or mailing address. Handling options: Keep Old (default) - Don't import if record exists. Keep New - Overwrite existing records (WARNING: loses notes and call history!). Import New and Old - Allow duplicates on multiple lists. The description updates as you change options to remind you what each does.",
+    "source": "video",
+    "videoId": "IEeqO4Gha2k"
+  },
+  {
+    "title": "Data Import Step 5 - Review and Finish",
+    "url": "https://www.youtube.com/watch?v=KisGnr1ATVc",
+    "category": "importing-and-adding-data",
+    "description": "Final step of importing - reviewing settings and completing the import.",
+    "content": "Import Step 5 - Review and Finish: Review summary: list name, source, fields to import, duplicate counts. Click 'Back' to change previous settings. Click 'Remap Data' to jump directly to field mapping. Click 'Show' to view actual duplicate records in database or on spreadsheet. When everything is correct, click 'Finish Import' to complete the process.",
+    "source": "video",
+    "videoId": "KisGnr1ATVc"
+  },
+  {
+    "title": "Action Plan Step 1 - Basic Configuration",
+    "url": "https://www.youtube.com/watch?v=9d3RkvIWRYg",
+    "category": "action-plans",
+    "description": "First step of creating an action plan - naming, scheduling type, and logic settings.",
+    "content": "Action Plan Step 1 - Basic Configuration: Provide a name for your action plan. Scheduling Type: Frequency-based - steps at day intervals (day 1, day 5, day 10). Date-based - steps on specific calendar dates. Scheduling Logic: Non-strict - all steps scheduled immediately. Strict - next step only schedules when previous is completed. Weekend Option: By default, no steps on weekends. Choose 'Yes' to include weekend scheduling.",
+    "source": "video",
+    "videoId": "9d3RkvIWRYg"
+  },
+  {
+    "title": "Action Plan Step 2 - Add Action Steps",
+    "url": "https://www.youtube.com/watch?v=S3YArqgw5I0",
+    "category": "action-plans",
+    "description": "Second step of creating action plans - adding and configuring individual steps.",
+    "content": "Action Plan Step 2 - Add Steps: Click 'Add Step' and select step type. Step Types: Phone Call - auto-scheduled in calendar, include script. Day 0 = assignment day. Email - drip email that auto-sends (no action needed from you). Letter - choose from templates or create your own. Task - manual task with subject. Mailing Labels - for print campaigns. For each step: Choose day to begin, assign agent (multi-agent accounts), select template. Multi-agent note: If no agent selected, defaults to whoever assigned the plan (or account owner for automatic assignments). Click X to remove unwanted steps.",
+    "source": "video",
+    "videoId": "S3YArqgw5I0"
+  },
+  {
+    "title": "Action Plan Step 3 - Set Triggers for Automation",
+    "url": "https://www.youtube.com/watch?v=25ORZueZ9oo",
+    "category": "action-plans",
+    "description": "Third step of action plans - setting up automatic triggers to assign contacts.",
+    "content": "Action Plan Step 3 - Triggers: Triggers automate action plan assignment. Trigger Types: Listing Status - auto-assign when property gets specific status (e.g., expired). Added to Calling List - auto-assign when contact added to list. Added to Group - MOST POPULAR! (e.g., Hot Lead group triggers Hot Lead action plan). Auto-Remove Option: When contact removed from trigger location, automatically remove from action plan. Useful when qualification changes.",
+    "source": "video",
+    "videoId": "25ORZueZ9oo"
+  },
+  {
+    "title": "Action Plan Step 4 - End Logic and Workflows",
+    "url": "https://www.youtube.com/watch?v=wdf4dqOx-AQ",
+    "category": "action-plans",
+    "description": "Final step of action plans - configuring what happens when the plan completes.",
+    "content": "Action Plan Step 4 - End Logic: Choose what happens when action plan completes. Options: Do Nothing (default) - plan simply ends. Repeat - loop back, choose starting day (1, 2, 3, or further out). Start Another Action Plan - chain plans together. Move to Group - transfer contacts to new group. Advanced Workflow: Combine end logic with triggers for powerful automation. Example: Plan ends → Move to Group → Group is trigger → New Plan starts automatically. Creates multi-level qualification workflows. Click Save to finalize your action plan.",
+    "source": "video",
+    "videoId": "wdf4dqOx-AQ"
+  },
+  {
+    "title": "AI-Generated Action Plans - Step 1 Configuration",
+    "url": "https://www.youtube.com/watch?v=wDlOrfg6CtI",
+    "category": "action-plans",
+    "description": "Creating action plans with AI - configuration options for target audience, tone, and step types.",
+    "content": "AI Action Plan Step 1 - Configuration: Name your action plan. Target Lead: Choose audience (Expired, FSBO, Solar, or enter custom 'Other'). Tone: Expert, Professional, Casual, or Funny. Step Types: Phone calls, Emails (choose paragraph length, option to mention previous conversations or attachments), Letters (choose paragraphs, mention previous conversations). Quantity: Set how many of each step type (e.g., 3 calls, 4 emails, 3 letters). Scheduling: Frequency-based (days apart) or Date-based (specific dates). Weekend Option: Include or exclude weekends. Custom Input (optional): Add additional AI instructions. Click 'Create with AI' to generate.",
+    "source": "video",
+    "videoId": "wDlOrfg6CtI"
+  },
+  {
+    "title": "AI-Generated Action Plans - Step 2 Review and Edit",
+    "url": "https://www.youtube.com/watch?v=BcTlFBb6ung",
+    "category": "action-plans",
+    "description": "Reviewing and editing AI-generated action plan steps, content, and templates.",
+    "content": "AI Action Plan Step 2 - Review and Edit: See all generated steps based on your selections. Adjust timing with +/- buttons (changes affect subsequent steps). Delete steps with X. Reorder by drag-and-drop. View Content: Phone call details, email content, letter content. Regenerate Content: Click to regenerate if you don't like it. Add manual edits to the text. Use Quick AI options to adjust tone/style. Template Saving: All templates auto-saved to settings. Labeled as 'AI generated' for easy identification. Reusable for future action plans. Click Next when satisfied.",
+    "source": "video",
+    "videoId": "BcTlFBb6ung"
+  },
+  {
+    "title": "Skip Tracer - Find Contact Information from Addresses",
+    "url": "https://www.youtube.com/watch?v=237Qy_FCrTY",
+    "category": "lead-store",
+    "description": "Using Mojo's Skip Tracer to find phone numbers, emails, and contact details from property addresses.",
+    "content": "Skip Tracer Overview: Find contact information when you only have property addresses. From address lists, Skip Tracer provides: Phone numbers, Emails, Mailing addresses, Co-owner names, Property data (square footage, bedrooms, bathrooms). Use Cases: Lists from title companies without contact info. Database of interested leads missing details. Open house sign-in sheets with addresses only. Access Methods (from Data & Dialer screen): Batch Lookup - for larger lists (open houses, title company data). One-time Lookup - for individual properties. Key Feature: NO MONTHLY LIMITS - run unlimited Skip Traces. Real-time database provides fresh contact details.",
+    "source": "video",
+    "videoId": "237Qy_FCrTY"
+  },
+  {
+    "title": "Neighborhood Search - Map-Based Prospecting",
+    "url": "https://www.youtube.com/watch?v=WIfMR4KIrQw",
+    "category": "lead-store",
+    "description": "Using Neighborhood Search to find and contact homeowners in specific geographic areas.",
+    "content": "Neighborhood Search Overview: Map-based prospecting tool to find leads in specific areas. Use Cases: Contact homeowners near a just-sold property. Spread word about upcoming open house. Circle prospecting. Target investment properties. Drawing Methods: Radius - draw circle around target area. Street-based - follow street patterns. Freeform - custom polygon shapes. Property Filters: Property type, Absentee ownership, Length of ownership, Property value, Loan-to-value ratios, and more. Data Provided: Phone numbers, emails, all property data. Direct import to database for immediate dialing.",
+    "source": "video",
+    "videoId": "WIfMR4KIrQw"
+  },
+  {
+    "title": "Mojo On-The-Go Mobile App",
+    "url": "https://www.youtube.com/watch?v=UshnfVFdnGc",
+    "category": "mobile-apps",
+    "description": "Using the Mojo On-The-Go mobile app for prospecting during gap times in your day.",
+    "content": "Mojo On-The-Go: Mobile app with essential Mojo functions on your smartphone. Perfect for: Waiting for appointments, Setting up at open houses, Gap times in your day. Features: Activity feed on home screen. Data & Dialer section - choose lists, review training, take notes, update contact info. Make calls with Preview feature. Use Power Dialer on mobile. Mojo ID Feature: Syncs your Mojo database with your phone. When leads call back, see their info instead of unknown number. Answer calls with confidence. No need to wait until back at the office!",
+    "source": "video",
+    "videoId": "UshnfVFdnGc"
+  },
+  {
+    "title": "Door Knocker Mobile App",
+    "url": "https://www.youtube.com/watch?v=454KS_Gi3NE",
+    "category": "mobile-apps",
+    "description": "Using the Door Knocker app for lead generation while canvassing neighborhoods on foot.",
+    "content": "Door Knocker App: Lead generation on foot has never been easier. Before You Knock: Enter address or tap on a property. Instantly access homeowner details, property data, contact information. After Conversation: Update status (Interested, Not Home, No Soliciting, etc.). Add notes. Sync directly to your Mojo account. Location Features: Uses your location (with permission) to tap nearby properties. Color-coded pins show visit history. Easy to see which properties visited and their status. Perfect for covering entire neighborhoods. Turn each knock into an opportunity!",
+    "source": "video",
+    "videoId": "454KS_Gi3NE"
+  },
+  {
+    "title": "Cold Calling Scripts and Techniques",
+    "url": "https://www.youtube.com/watch?v=zOqFGO5TJk4",
+    "category": "sales-scripts",
+    "description": "Effective cold calling scripts from Bob Leffler - what to say and what NOT to say.",
+    "content": "Cold Calling Scripts (Bob Leffler, Fearless Agent Coaching): What NOT to Say: Don't mention recent sales ('I just listed/sold the one down the street') - leads to price questions and disappointment. Don't ask for referrals ('Any friends thinking of selling?') - strangers won't refer, just lengthens calls. Recommended Script - Opening: 'Hi, my name is [Name]. I'm a real estate agent with [Company], and I was just calling to see if you might be thinking of selling your house.' If No: 'Do you have any plans of moving ever?' (Sometimes reveals '8 months' = 'That's an emergency! We should meet.'). If Yes - Ask WHERE first (like a friend would), then WHEN: 'Where are you moving to?' 'When is the soonest you and all your stuff would be moving?' Set Appointment: 'Let's find a time to get together. I do business completely differently than all other agents. Afternoons or evenings - are you nine-to-five people?'",
+    "source": "video",
+    "videoId": "zOqFGO5TJk4"
+  },
+  {
+    "title": "For Sale By Owner (FSBO) Scripts",
+    "url": "https://www.youtube.com/watch?v=ua13AQZZ_rI",
+    "category": "sales-scripts",
+    "description": "FSBO prospecting scripts from Bob Leffler - the 'my records indicate' technique.",
+    "content": "FSBO Scripts (Bob Leffler, Fearless Agent Coaching): Key Insight: FSBOs either blow you off in 2 seconds OR have a nice conversation. Goal is finding words that lead to comfortable conversation. Opening (knock them off script): 'Hi, my name is [Name]. I'm a real estate agent with [Company], and I was calling because MY RECORDS INDICATE that your house is for sale by owner. Is that true?' Why 'my records indicate' works: Makes them think 'Records? IRS? NSA?' Knocks them off their prepared script. Pre-empts their favorite line 'We're selling it ourselves'. Build Rapport: Ask 2-3 quick questions (bedrooms? bathrooms?) - no awkward pauses. The Setup Question: 'You're trying to sell without a real estate professional. Is that because you hate realtors?' Response: 'No, I don't want to pay commission.' React: 'Really? So it's about money?' The Magic Question: 'If you knew absolutely for certain that by doing business with me, your house would actually sell AND you'd end up with way more money bottom line than any other way, with or without an agent... would you at least want to hear about it?' This question works every time - if it doesn't get the appointment, nothing would have.",
+    "source": "video",
+    "videoId": "ua13AQZZ_rI"
+  },
+  {
+    "title": "Expired Listing Scripts",
+    "url": "https://www.youtube.com/watch?v=36d4RJLHWpY",
+    "category": "sales-scripts",
+    "description": "Expired listing prospecting scripts from Bob Leffler - the backdoor approach.",
+    "content": "Expired Listing Scripts (Bob Leffler, Fearless Agent Coaching): Traditional Problem: Old approach tries to get expired to admit they still want to sell - leads to circular frustrating conversations. The Backdoor Approach - Opening: 'Hi, my name is [Name]. I'm a real estate agent with [Company]. I'm calling because my records indicate that your house was for sale and left the market unsold. Is that true?' Why it works: Complex enough they have to think. 'Uh, yeah, that's true' - knocks them off their game. The Backdoor Question: 'I specialize in helping people who had their house for sale but were unsuccessful because their agent didn't do their job. Do you think that was the case for you?' Two Outcomes: ~80% blame something else (market, timing) = NOT serious about selling. ~20% blame their agent = SERIOUS sellers (wouldn't dish on agent otherwise). For the 20% (serious sellers): 'I do business completely differently than all other agents. It virtually guarantees your house will sell AND you'd end up with way more money.' Close: 'Would you say that's definitely what you're looking for this time?' KEY INSIGHT: When they blamed their agent, Bob ALWAYS got the appointment scheduled.",
+    "source": "video",
+    "videoId": "36d4RJLHWpY"
+  }
+]

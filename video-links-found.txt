@@ -1,0 +1,46 @@
+# Mojo Video Links Found in Codebase
+
+## YouTube Videos (from templates and JS files)
+
+1. https://www.youtube.com/watch?v=MwOm2nIfXHg (KPI Dashboard help video)
+2. https://www.youtube.com/watch?v=3PwvlfMMCHI (PieSync integration)
+3. https://www.youtube.com/watch?v=sgdWw6QIqfI (Zapier integration)
+4. https://www.youtube.com/watch?v=A2rd_M-SR-8 (Main index video)
+5. https://www.youtube.com/watch?v=7mlWCdmexsA (Multiple references - appears to be main tutorial)
+6. https://www.youtube.com/watch?v=_6zqVQj0pNc (Menu video 1, Podcast 1)
+7. https://www.youtube.com/watch?v=opcbmd6cIJ8 (Menu videos 2/5, Podcasts 2/5)
+8. https://www.youtube.com/watch?v=795qZ0Hrw6I (Menu video 3, Podcast 3)
+9. https://www.youtube.com/watch?v=brVxdrgkZGQ (Import contacts - first step)
+10. https://www.youtube.com/watch?v=F2wxqJJSHgE (Lead Store help video)
+11. https://www.youtube.com/watch?v=2K5a9KVMyXg (Call Wizard / Power Dialer)
+12. https://www.youtube.com/watch?v=_XOdwecRVlo (Import walkthrough)
+13. https://www.youtube.com/watch?v=237Qy_FCrTY
+14. https://www.youtube.com/watch?v=25ORZueZ9oo
+15. https://www.youtube.com/watch?v=9d3RkvIWRYg
+16. https://www.youtube.com/watch?v=BRDEAO_J_HY
+17. https://www.youtube.com/watch?v=BcTlFBb6ung
+18. https://www.youtube.com/watch?v=IEeqO4Gha2k
+19. https://www.youtube.com/watch?v=JRBgZUSskUI
+20. https://www.youtube.com/watch?v=KisGnr1ATVc
+21. https://www.youtube.com/watch?v=S3YArqgw5I0
+22. https://www.youtube.com/watch?v=WIfMR4KIrQw
+23. https://www.youtube.com/watch?v=cxWORV8dP0E
+24. https://www.youtube.com/watch?v=eKA-1n3o_H4
+25. https://www.youtube.com/watch?v=hrpcwkgbPuM
+26. https://www.youtube.com/watch?v=wDlOrfg6CtI
+27. https://www.youtube.com/watch?v=wdf4dqOx-AQ
+28. https://www.youtube.com/watch?v=y1GC9PxmNTI
+29. https://www.youtube.com/watch?v=syA1e1JCp8Q (From main menu)
+30. https://www.youtube.com/watch?v=x_njTnEb2Ck (Newsletters)
+31. https://www.youtube.com/watch?v=w--TpwUpM0M (Email signature)
+
+## Summary
+Total unique videos found: 31
+
+Context found for some:
+- KPI Dashboard tutorials
+- Integration guides (Zapier, PieSync)
+- Import/contact management
+- Power Dialer / Call Wizard
+- Lead Store features
+- Various feature walkthroughs and tutorials
