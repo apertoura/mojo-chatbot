@@ -278,7 +278,7 @@ async function logConversation(ip, sessionId, role, content, metadata = {}) {
     timestamp,
     sessionId,
     role,
-    content: content.substring(0, 5000), // Truncate very long messages
+    content: content, // Full content, no truncation
     ...metadata
   };
   
