@@ -513,7 +513,9 @@ app.post('/api/chat', async (req, res) => {
       context += 'IMPORTANT: Do NOT replace your full answer with the correction. Instead:\n';
       context += '- Still give a complete, helpful answer using KB articles and other sources\n';
       context += '- But APPLY these corrections to fix any inaccurate facts in your response\n';
-      context += '- The correction tells you what was WRONG — make sure your answer gets it RIGHT\n\n';
+      context += '- The correction tells you what was WRONG — make sure your answer gets it RIGHT\n';
+      context += '- If the question still needs clarification, STILL ask for clarification\n';
+      context += '  but make sure the options you offer are accurate (remove any wrong options the correction flags)\n\n';
       correctionResults.forEach((corr, i) => {
         context += `[CORRECTION-${i + 1}]\n`;
         context += `When asked: ${corr.question}\n`;
@@ -592,7 +594,11 @@ Rules for clarification:
 - Options should be short (under 10 words each)
 - The user can always type a custom response, so don't try to cover every possibility
 - Only ask for clarification when genuinely needed — if you can give a good answer, just answer
-- Examples of when to clarify: "it's not working" (what specifically?), "how do I set up" (set up what feature?), "having problems" (what kind?)
+- Examples of when to clarify: "it's not working" (what specifically?), "how do I set up" (set up what feature?), "having problems" (what kind?), "how do I download/install" (which platform?)
+- IMPORTANT: User corrections do NOT remove the need for clarification. If a question would normally
+  need clarification, STILL ask for clarification — but use the corrections to ensure your options
+  are accurate. For example, if a correction says "there is no desktop app", still ask the user
+  what they mean, but remove "Desktop app" from the options and only show valid options.
 
 Guidelines for answers:
 - USE THE KNOWLEDGE BASE ARTICLES THOROUGHLY - they contain detailed, accurate information
