@@ -1,1 +1,12 @@
-[]
+[
+  {
+    "id": "7ec6c0f8-ce18-4826-9817-53a2a80a79ff",
+    "question": "hi, how do I download Mojo?",
+    "aiResponse": "I'd be happy to help you get Mojo set up! Are you looking for:",
+    "correction": "There is no desktop application",
+    "sessionId": "5a7f8c16-e3d4-46bb-a5eb-929663d995ac",
+    "messageIndex": null,
+    "submittedAt": "2026-02-09T06:56:38.310Z",
+    "ip": "::ffff:95.60.9.200"
+  }
+]

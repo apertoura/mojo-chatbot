@@ -506,15 +506,19 @@ app.post('/api/chat', async (req, res) => {
     // Build context from all sources
     let context = '';
     
-    // Corrections go FIRST — highest priority overrides
+    // Corrections go FIRST — authoritative adjustments
     if (correctionResults.length > 0) {
-      context += '=== ⚠️ USER CORRECTIONS (HIGHEST PRIORITY) ===\n';
-      context += 'These are corrections submitted by real users who found previous answers inaccurate.\n';
-      context += 'You MUST use these corrections to override any conflicting information from other sources.\n\n';
+      context += '=== ⚠️ USER CORRECTIONS (AUTHORITATIVE) ===\n';
+      context += 'These corrections were submitted by real users/experts who found specific facts in previous answers to be wrong.\n';
+      context += 'IMPORTANT: Do NOT replace your full answer with the correction. Instead:\n';
+      context += '- Still give a complete, helpful answer using KB articles and other sources\n';
+      context += '- But APPLY these corrections to fix any inaccurate facts in your response\n';
+      context += '- The correction tells you what was WRONG — make sure your answer gets it RIGHT\n\n';
       correctionResults.forEach((corr, i) => {
         context += `[CORRECTION-${i + 1}]\n`;
-        context += `Original question: ${corr.question}\n`;
-        context += `Correct answer: ${corr.correction}\n\n`;
+        context += `When asked: ${corr.question}\n`;
+        context += `What was wrong in previous answer: ${corr.aiResponse ? corr.aiResponse.substring(0, 200) : 'N/A'}\n`;
+        context += `Correct fact: ${corr.correction}\n\n`;
       });
     }
     
@@ -601,7 +605,10 @@ Guidelines for answers:
 - If you don't have the answer, say so briefly
 - Use markdown formatting in your message (bold, lists, headers)
 
-IMPORTANT: User corrections (if present below) take HIGHEST PRIORITY over all other sources.
+IMPORTANT: If user corrections are present below, they are AUTHORITATIVE facts from real experts.
+Do NOT just parrot the correction as your whole answer. Give a full, helpful response but make sure
+the corrected facts are accurately reflected. Think of corrections as "this specific thing was wrong,
+fix it" — your job is still to give a complete answer, just one that incorporates the corrected info.
 KB articles are your PRIMARY source. Support tickets are supplementary context.
 
 Reference information:
