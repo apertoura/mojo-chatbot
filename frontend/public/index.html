@@ -705,8 +705,6 @@
       const [sessionId, setSessionId] = useState(null);
       const [error, setError] = useState(null);
       const [correctionModal, setCorrectionModal] = useState(null);
-      const [correctionText, setCorrectionText] = useState('');
-      const [submittingCorrection, setSubmittingCorrection] = useState(false);
       const [correctionSuccess, setCorrectionSuccess] = useState(null);
       const chatContainerRef = useRef(null);
       const textareaRef = useRef(null);
@@ -792,47 +790,10 @@
       
       const openCorrectionModal = (msg, idx) => {
         setCorrectionModal({ message: msg, index: idx });
-        setCorrectionText('');
       };
       
       const closeCorrectionModal = () => {
         setCorrectionModal(null);
-        setCorrectionText('');
-      };
-      
-      const submitCorrection = async () => {
-        if (!correctionText.trim() || !correctionModal) return;
-        
-        setSubmittingCorrection(true);
-        
-        try {
-          const response = await fetch(CORRECTION_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              question: correctionModal.message.userQuestion,
-              aiResponse: correctionModal.message.content,
-              correction: correctionText.trim(),
-              sessionId: correctionModal.message.sessionId,
-              messageIndex: correctionModal.message.messageIndex
-            })
-          });
-          
-          if (!response.ok) {
-            throw new Error('Failed to submit correction');
-          }
-          
-          const data = await response.json();
-          
-          setCorrectionSuccess(data.message);
-          closeCorrectionModal();
-          
-        } catch (err) {
-          console.error('Correction error:', err);
-          alert('Failed to submit correction. Please try again.');
-        } finally {
-          setSubmittingCorrection(false);
-        }
       };
       
       // Handle clicking a quick-reply chip
@@ -984,11 +945,41 @@
         );
       };
       
-      const CorrectionModal = () => {
+      const CorrectionModal = ({ correctionModal, onClose, onSuccess }) => {
+        const [text, setText] = useState('');
+        const [submitting, setSubmitting] = useState(false);
+        
         if (!correctionModal) return null;
         
+        const handleSubmit = async () => {
+          if (!text.trim()) return;
+          setSubmitting(true);
+          try {
+            const response = await fetch(CORRECTION_URL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                question: correctionModal.message.userQuestion,
+                aiResponse: correctionModal.message.content,
+                correction: text.trim(),
+                sessionId: correctionModal.message.sessionId,
+                messageIndex: correctionModal.message.messageIndex
+              })
+            });
+            if (!response.ok) throw new Error('Failed to submit correction');
+            const data = await response.json();
+            onSuccess(data.message);
+            onClose();
+          } catch (err) {
+            console.error('Correction error:', err);
+            alert('Failed to submit correction. Please try again.');
+          } finally {
+            setSubmitting(false);
+          }
+        };
+        
         return (
-          <div className="modal-overlay" onClick={closeCorrectionModal}>
+          <div className="modal-overlay" onClick={onClose}>
             <div className="modal" onClick={(e) => e.stopPropagation()}>
               <div className="modal-header">
                 <h2>📝 Suggest Correction</h2>
@@ -1014,8 +1005,8 @@
                 <div className="modal-field">
                   <label>What should the correct answer be?</label>
                   <textarea
-                    value={correctionText}
-                    onChange={(e) => setCorrectionText(e.target.value)}
+                    value={text}
+                    onChange={(e) => setText(e.target.value)}
                     placeholder="Enter the correct answer or explanation..."
                     autoFocus
                   />
@@ -1023,15 +1014,15 @@
               </div>
               
               <div className="modal-footer">
-                <button className="modal-button modal-button-cancel" onClick={closeCorrectionModal}>
+                <button className="modal-button modal-button-cancel" onClick={onClose}>
                   Cancel
                 </button>
                 <button 
                   className="modal-button modal-button-submit" 
-                  onClick={submitCorrection}
-                  disabled={!correctionText.trim() || submittingCorrection}
+                  onClick={handleSubmit}
+                  disabled={!text.trim() || submitting}
                 >
-                  {submittingCorrection ? 'Submitting...' : 'Submit Correction'}
+                  {submitting ? 'Submitting...' : 'Submit Correction'}
                 </button>
               </div>
             </div>
@@ -1159,7 +1150,11 @@
             </form>
           </div>
           
-          <CorrectionModal />
+          <CorrectionModal 
+            correctionModal={correctionModal} 
+            onClose={closeCorrectionModal} 
+            onSuccess={(msg) => setCorrectionSuccess(msg)} 
+          />
         </div>
       );
     }
