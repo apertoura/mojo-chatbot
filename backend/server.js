@@ -3,7 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import Anthropic from '@anthropic-ai/sdk';
-import { readFile, appendFile, mkdir } from 'fs/promises';
+import { readFile, writeFile, appendFile, mkdir } from 'fs/promises';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import dotenv from 'dotenv';
@@ -16,6 +16,68 @@ const __dirname = dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3456;
+
+// --- Corrections Store ---
+const CORRECTIONS_PATH = join(__dirname, '../data/corrections.json');
+let corrections = [];
+
+async function loadCorrections() {
+  try {
+    const data = await readFile(CORRECTIONS_PATH, 'utf8');
+    corrections = JSON.parse(data);
+    console.log(`✅ Loaded ${corrections.length} user corrections`);
+  } catch (error) {
+    console.log('ℹ️  No corrections file found (will be created when needed)');
+    corrections = [];
+  }
+}
+
+async function saveCorrections() {
+  try {
+    await writeFile(CORRECTIONS_PATH, JSON.stringify(corrections, null, 2));
+  } catch (err) {
+    console.error('Failed to save corrections:', err.message);
+  }
+}
+
+// Search corrections for similar questions
+function searchCorrections(query, limit = 3) {
+  if (corrections.length === 0) return [];
+  
+  const queryLower = query.toLowerCase();
+  const keywords = queryLower.split(/\s+/).filter(k => k.length > 2);
+  const stopWords = ['how', 'what', 'where', 'when', 'why', 'can', 'does', 'the', 'and', 'for', 'with', 'about', 'help', 'need', 'want', 'please', 'mojo'];
+  const topicKeywords = keywords.filter(k => !stopWords.includes(k));
+  
+  const scored = corrections.map(corr => {
+    const questionLower = corr.question.toLowerCase();
+    const correctionLower = corr.correction.toLowerCase();
+    
+    let score = 0;
+    
+    // Exact phrase match in original question — strongest signal
+    if (questionLower.includes(queryLower) || queryLower.includes(questionLower)) {
+      score += 50;
+    }
+    
+    topicKeywords.forEach(keyword => {
+      if (questionLower.includes(keyword)) score += 15;
+      if (correctionLower.includes(keyword)) score += 5;
+    });
+    
+    // All keywords present bonus
+    const allPresent = topicKeywords.every(k => questionLower.includes(k) || correctionLower.includes(k));
+    if (allPresent && topicKeywords.length > 0) score += 20;
+    
+    return { correction: corr, score };
+  });
+  
+  return scored
+    .filter(s => s.score > 10)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit)
+    .map(s => s.correction);
+}
 
 // Security middleware
 app.use(helmet({
@@ -105,32 +167,57 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY
 });
 
+// Escape special regex characters
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 // Search KB articles
-function searchKB(query, limit = 3) {
+function searchKB(query, limit = 5) {
   if (kbArticles.length === 0) return [];
   
   const queryLower = query.toLowerCase();
   const keywords = queryLower.split(/\s+/).filter(k => k.length > 2);
   
+  // Extract key topic words (remove common words)
+  const stopWords = ['how', 'what', 'where', 'when', 'why', 'can', 'does', 'the', 'and', 'for', 'with', 'about', 'help', 'need', 'want', 'please', 'mojo'];
+  const topicKeywords = keywords.filter(k => !stopWords.includes(k));
+  
   const scored = kbArticles.map(article => {
     const titleLower = article.title.toLowerCase();
     const contentLower = article.content.toLowerCase();
     const categoryLower = (article.category || '').toLowerCase();
+    const descLower = (article.description || '').toLowerCase();
     
     let score = 0;
     
-    keywords.forEach(keyword => {
+    // Exact phrase match in title - highest priority
+    if (titleLower.includes(queryLower)) {
+      score += 50;
+    }
+    
+    // Topic keyword matches
+    topicKeywords.forEach(keyword => {
+      // Title matches are most important
       if (titleLower.includes(keyword)) {
-        score += 10;
-        if (titleLower.startsWith(keyword)) score += 5;
+        score += 20;
+        if (titleLower.startsWith(keyword)) score += 10;
       }
-      if (categoryLower.includes(keyword)) score += 7;
-      const contentMatches = (contentLower.match(new RegExp(keyword, 'g')) || []).length;
-      score += Math.min(contentMatches, 5);
+      // Category match
+      if (categoryLower.includes(keyword)) score += 15;
+      // Description match
+      if (descLower.includes(keyword)) score += 10;
+      // Content matches (count occurrences)
+      const contentMatches = (contentLower.match(new RegExp(escapeRegex(keyword), 'g')) || []).length;
+      score += Math.min(contentMatches * 2, 15);
     });
     
-    if (queryLower.length > 10 && contentLower.includes(queryLower)) {
-      score += 15;
+    // All keywords present bonus
+    const allKeywordsPresent = topicKeywords.every(k => 
+      titleLower.includes(k) || contentLower.includes(k)
+    );
+    if (allKeywordsPresent && topicKeywords.length > 0) {
+      score += 25;
     }
     
     return { article, score };
@@ -163,10 +250,10 @@ function searchTickets(query, limit = 3) {
         if (subjectLower.startsWith(keyword)) score += 5;
       }
       
-      const descMatches = (descriptionLower.match(new RegExp(keyword, 'g')) || []).length;
+      const descMatches = (descriptionLower.match(new RegExp(escapeRegex(keyword), 'g')) || []).length;
       score += Math.min(descMatches, 3);
       
-      const resMatches = (resolutionLower.match(new RegExp(keyword, 'g')) || []).length;
+      const resMatches = (resolutionLower.match(new RegExp(escapeRegex(keyword), 'g')) || []).length;
       score += Math.min(resMatches, 5);
     });
     
@@ -210,7 +297,7 @@ function searchMojosells(query, limit = 3) {
         if (titleLower.startsWith(keyword)) score += 5;
       }
       if (urlLower.includes(keyword)) score += 5;
-      const contentMatches = (contentLower.match(new RegExp(keyword, 'g')) || []).length;
+      const contentMatches = (contentLower.match(new RegExp(escapeRegex(keyword), 'g')) || []).length;
       score += Math.min(contentMatches, 5);
     });
     
@@ -323,6 +410,63 @@ app.get('/api/kb/status', (req, res) => {
   });
 });
 
+// --- Correction Endpoint ---
+app.post('/api/correction', async (req, res) => {
+  try {
+    const { question, aiResponse, correction, sessionId, messageIndex } = req.body;
+    const clientIP = getClientIP(req);
+    
+    if (!question || !correction) {
+      return res.status(400).json({ error: 'Question and correction are required' });
+    }
+    
+    const entry = {
+      id: uuidv4(),
+      question: question.trim(),
+      aiResponse: (aiResponse || '').trim(),
+      correction: correction.trim(),
+      sessionId: sessionId || null,
+      messageIndex: messageIndex || null,
+      submittedAt: new Date().toISOString(),
+      ip: clientIP
+    };
+    
+    corrections.push(entry);
+    await saveCorrections();
+    
+    // Log the correction
+    logConversation(clientIP, sessionId || 'unknown', 'correction', correction, {
+      question,
+      aiResponse: (aiResponse || '').substring(0, 300),
+      correctionId: entry.id
+    });
+    
+    console.log(`📝 Correction #${corrections.length} saved: "${question.substring(0, 60)}..." → "${correction.substring(0, 60)}..."`);
+    
+    res.json({ 
+      success: true, 
+      message: 'Thank you! Your correction has been saved and will improve future responses.',
+      correctionId: entry.id,
+      totalCorrections: corrections.length
+    });
+  } catch (error) {
+    console.error('Correction save error:', error);
+    res.status(500).json({ error: 'Failed to save correction' });
+  }
+});
+
+// --- Get corrections count (for admin/debug) ---
+app.get('/api/corrections/stats', (req, res) => {
+  res.json({
+    total: corrections.length,
+    recent: corrections.slice(-5).map(c => ({
+      question: c.question.substring(0, 80),
+      correction: c.correction.substring(0, 80),
+      submittedAt: c.submittedAt
+    }))
+  });
+});
+
 // Chat endpoint
 app.post('/api/chat', async (req, res) => {
   try {
@@ -354,19 +498,32 @@ app.post('/api/chat', async (req, res) => {
     session.lastActivity = Date.now();
     
     // Search all data sources
-    const kbResults = searchKB(message, 3);
+    const kbResults = searchKB(message, 5);
     const ticketResults = searchTickets(message, 2);
     const mojosellsResults = searchMojosells(message, 2);
+    const correctionResults = searchCorrections(message, 3);
     
     // Build context from all sources
     let context = '';
+    
+    // Corrections go FIRST — highest priority overrides
+    if (correctionResults.length > 0) {
+      context += '=== ⚠️ USER CORRECTIONS (HIGHEST PRIORITY) ===\n';
+      context += 'These are corrections submitted by real users who found previous answers inaccurate.\n';
+      context += 'You MUST use these corrections to override any conflicting information from other sources.\n\n';
+      correctionResults.forEach((corr, i) => {
+        context += `[CORRECTION-${i + 1}]\n`;
+        context += `Original question: ${corr.question}\n`;
+        context += `Correct answer: ${corr.correction}\n\n`;
+      });
+    }
     
     if (kbResults.length > 0) {
       context += '=== KNOWLEDGE BASE ARTICLES ===\n\n';
       kbResults.forEach((article, i) => {
         context += `[KB-${i + 1}] ${article.title}\n`;
         context += `Category: ${article.category || 'General'}\n`;
-        context += `Content: ${article.content.substring(0, 800)}...\n`;
+        context += `Content: ${article.content.substring(0, 1500)}...\n`;
         context += `URL: ${article.url}\n\n`;
       });
     }
@@ -415,16 +572,39 @@ app.post('/api/chat', async (req, res) => {
     });
     
     // Build system prompt
-    const systemPrompt = `You are a helpful Mojo Dialer support assistant. Answer questions about Mojo using the provided documentation, support tickets, and website content.
+    const systemPrompt = `You are a helpful, conversational Mojo Dialer support assistant.
 
-Guidelines:
-- Be concise and friendly
-- Cite specific articles or tickets when relevant
-- If information isn't in the provided context, say so
-- Provide step-by-step instructions when appropriate
-- Reference relevant URLs when available
+RESPONSE FORMAT:
+You MUST respond with valid JSON only. No text outside the JSON.
 
-Available documentation:
+When you can answer the question clearly:
+{"type":"answer","message":"Your detailed answer here using markdown formatting"}
+
+When the question is vague, ambiguous, or could mean several things — ask for clarification:
+{"type":"clarification","message":"A friendly clarifying question","options":["Option A","Option B","Option C"]}
+
+Rules for clarification:
+- Provide 2-4 specific options that cover the most likely interpretations
+- Options should be short (under 10 words each)
+- The user can always type a custom response, so don't try to cover every possibility
+- Only ask for clarification when genuinely needed — if you can give a good answer, just answer
+- Examples of when to clarify: "it's not working" (what specifically?), "how do I set up" (set up what feature?), "having problems" (what kind?)
+
+Guidelines for answers:
+- USE THE KNOWLEDGE BASE ARTICLES THOROUGHLY - they contain detailed, accurate information
+- Provide complete, detailed answers using all relevant information from the KB articles
+- Give step-by-step instructions when the KB has them
+- Be concise but comprehensive - don't skip important details from the KB
+- Give direct answers without explaining your sources
+- Do NOT say "based on documentation", "based on tickets", "according to our records", etc.
+- Just answer naturally as if you know the information
+- If you don't have the answer, say so briefly
+- Use markdown formatting in your message (bold, lists, headers)
+
+IMPORTANT: User corrections (if present below) take HIGHEST PRIORITY over all other sources.
+KB articles are your PRIMARY source. Support tickets are supplementary context.
+
+Reference information:
 ${context}`;
     
     // Call Claude
@@ -435,9 +615,30 @@ ${context}`;
       messages: session.messages.slice(-10) // Last 10 messages for context
     });
     
-    const assistantMessage = response.content[0].text;
+    const rawResponse = response.content[0].text;
     
-    // Add assistant response to session
+    // Parse structured JSON response from Claude
+    let responseType = 'answer';
+    let assistantMessage = rawResponse;
+    let suggestedReplies = null;
+    
+    try {
+      // Try to parse JSON — Claude should return structured response
+      const parsed = JSON.parse(rawResponse);
+      if (parsed.type && parsed.message) {
+        responseType = parsed.type;
+        assistantMessage = parsed.message;
+        if (parsed.type === 'clarification' && Array.isArray(parsed.options)) {
+          suggestedReplies = parsed.options;
+        }
+      }
+    } catch {
+      // If Claude didn't return valid JSON, use raw text as-is (graceful fallback)
+      responseType = 'answer';
+      assistantMessage = rawResponse;
+    }
+    
+    // Add assistant response to session (store the readable message, not JSON)
     session.messages.push({
       role: 'assistant',
       content: assistantMessage
@@ -445,8 +646,14 @@ ${context}`;
     
     // Log assistant response with full debug data
     logConversation(clientIP, sid, 'assistant', assistantMessage, {
+      responseType,
+      suggestedReplies,
       debug: {
         sourcesUsed: {
+          corrections: correctionResults.map(c => ({
+            question: c.question.substring(0, 100),
+            correction: c.correction.substring(0, 100)
+          })),
           kb: kbResults.map(a => ({ 
             title: a.title, 
             url: a.url, 
@@ -470,6 +677,7 @@ ${context}`;
     
     // Prepare response with sources used
     const sourcesUsed = {
+      corrections: correctionResults.map(c => ({ question: c.question, correction: c.correction })),
       kb: kbResults.map(a => ({ title: a.title, url: a.url, category: a.category })),
       tickets: ticketResults.map(t => ({ subject: t.subject, status: t.status })),
       mojosells: mojosellsResults.map(p => ({ title: p.title, url: p.url }))
@@ -477,9 +685,12 @@ ${context}`;
     
     res.json({
       response: assistantMessage,
+      responseType,
+      suggestedReplies,
       sessionId: sid,
       sourcesUsed,
-      articlesUsed: kbResults.map(a => ({ title: a.title, url: a.url })) // For backwards compatibility
+      correctionsApplied: correctionResults.length,
+      articlesUsed: kbResults.map(a => ({ title: a.title, url: a.url }))
     });
     
   } catch (error) {
@@ -507,7 +718,8 @@ async function start() {
   await Promise.all([
     loadKB(),
     loadTickets(),
-    loadMojosells()
+    loadMojosells(),
+    loadCorrections()
   ]);
   
   app.listen(PORT, () => {
@@ -516,6 +728,7 @@ async function start() {
     console.log(`   KB Articles: ${kbLoaded ? '✅' : '❌'} (${kbArticles.length})`);
     console.log(`   Support Tickets: ${ticketsLoaded ? '✅' : '⚠️ '} (${zohoTickets.length})`);
     console.log(`   Mojosells.com: ${mojosellsLoaded ? '✅' : '⚠️ '} (${mojosellsPages.length})`);
+    console.log(`   User Corrections: ✅ (${corrections.length})`);
     console.log(`\nReady to serve! 🎉\n`);
   });
 }

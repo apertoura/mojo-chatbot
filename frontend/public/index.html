@@ -615,6 +615,61 @@
       font-size: 14px;
     }
     
+    /* Quick-reply chips */
+    .suggested-replies {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    
+    .suggested-chip {
+      background: #fff;
+      border: 2px solid #e46317;
+      color: #e46317;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    
+    .suggested-chip:hover {
+      background: #e46317;
+      color: white;
+      transform: translateY(-1px);
+      box-shadow: 0 3px 8px rgba(228, 99, 23, 0.3);
+    }
+    
+    .suggested-chip.other-chip {
+      border-color: #9ca3af;
+      color: #6b7280;
+    }
+    
+    .suggested-chip.other-chip:hover {
+      background: #6b7280;
+      color: white;
+      border-color: #6b7280;
+    }
+    
+    /* Corrections applied badge */
+    .corrections-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+      border: 1px solid #a7f3d0;
+      color: #065f46;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      margin-top: 8px;
+    }
+    
     @media (max-width: 768px) {
       .container {
         height: 100vh;
@@ -711,10 +766,13 @@
           const assistantMessage = {
             role: 'assistant',
             content: data.response,
+            responseType: data.responseType || 'answer',
+            suggestedReplies: data.suggestedReplies || null,
+            correctionsApplied: data.correctionsApplied || 0,
             articles: data.articlesUsed,
             sourcesUsed: data.sourcesUsed,
             timestamp: new Date(),
-            userQuestion: message, // Store the question for corrections
+            userQuestion: message,
             messageIndex: data.messageIndex,
             sessionId: data.sessionId
           };
@@ -775,6 +833,62 @@
         } finally {
           setSubmittingCorrection(false);
         }
+      };
+      
+      // Handle clicking a quick-reply chip
+      const handleChipClick = (chipText) => {
+        setInput(chipText);
+        // Auto-submit after a brief moment so user sees what's being sent
+        setTimeout(() => {
+          const fakeEvent = { preventDefault: () => {} };
+          // Set input and submit
+          setInput('');
+          setError(null);
+          setLoading(true);
+          
+          const userMessage = {
+            role: 'user',
+            content: chipText,
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, userMessage]);
+          
+          fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: chipText, sessionId })
+          })
+          .then(r => r.ok ? r.json() : r.json().then(e => { throw new Error(e.error); }))
+          .then(data => {
+            setSessionId(data.sessionId);
+            const assistantMessage = {
+              role: 'assistant',
+              content: data.response,
+              responseType: data.responseType || 'answer',
+              suggestedReplies: data.suggestedReplies || null,
+              correctionsApplied: data.correctionsApplied || 0,
+              articles: data.articlesUsed,
+              sourcesUsed: data.sourcesUsed,
+              timestamp: new Date(),
+              userQuestion: chipText,
+              messageIndex: data.messageIndex,
+              sessionId: data.sessionId
+            };
+            setMessages(prev => [...prev, assistantMessage]);
+          })
+          .catch(err => {
+            setError(err.message || 'Failed to send message.');
+            setMessages(prev => prev.slice(0, -1));
+          })
+          .finally(() => {
+            setLoading(false);
+            textareaRef.current?.focus();
+          });
+        }, 50);
+      };
+      
+      const handleOtherClick = () => {
+        textareaRef.current?.focus();
       };
       
       const handleKeyPress = (e) => {
@@ -952,6 +1066,23 @@
                   </div>
                   <div className="message-content">
                     <div dangerouslySetInnerHTML={{ __html: marked.parse(msg.content || '') }} />
+                    {msg.suggestedReplies && msg.suggestedReplies.length > 0 && !loading && (
+                      <div className="suggested-replies">
+                        {msg.suggestedReplies.map((chip, i) => (
+                          <button key={i} className="suggested-chip" onClick={() => handleChipClick(chip)}>
+                            {chip}
+                          </button>
+                        ))}
+                        <button className="suggested-chip other-chip" onClick={handleOtherClick}>
+                          ✏️ Other...
+                        </button>
+                      </div>
+                    )}
+                    {msg.correctionsApplied > 0 && (
+                      <div className="corrections-badge">
+                        🔄 Improved by community feedback ({msg.correctionsApplied} correction{msg.correctionsApplied > 1 ? 's' : ''} applied)
+                      </div>
+                    )}
                     {msg.articles && msg.articles.length > 0 && (
                       <div className="articles">
                         <div className="articles-title">📚 Related Articles:</div>
